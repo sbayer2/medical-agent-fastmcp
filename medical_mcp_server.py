@@ -37,7 +37,8 @@ if not openai_client:
 BILLING_TIERS = {
     "basic": {"price": 0.10, "description": "Basic SOAP analysis - vital signs, medications, basic conditions"},
     "comprehensive": {"price": 0.50, "description": "Full medical record analysis - detailed insights, recommendations"},
-    "batch": {"price": 0.05, "description": "Bulk processing per document - optimized for multiple files"}
+    "batch": {"price": 0.05, "description": "Bulk processing per document - optimized for multiple files"},
+    "complicated": {"price": 0.75, "description": "Multi-step clinical reasoning with quality assurance and specialist-level analysis"}
 }
 
 # Sample medical data for demonstration (in production, this would connect to actual medical databases)
@@ -380,6 +381,84 @@ Perform a thorough analysis of the medical document including:
 Provide detailed clinical insights with medical reasoning and recommendations.
         Use structured JSON format with comprehensive categories."""
         
+    elif analysis_type == "complicated":
+        system_prompt = """You are a specialized medical AI consultant performing advanced clinical analysis with multi-step reasoning.
+
+MANDATORY MULTI-STEP WORKFLOW:
+
+STEP 1: Document Validation & Completeness Assessment
+- Verify medical document authenticity and completeness (score 1-10)
+- Identify document type (SOAP, lab report, discharge summary, H&P, etc.)
+- Flag missing critical information and data quality issues
+- Assess temporal context and document relationships
+
+STEP 2: Comprehensive Clinical Data Extraction  
+- Extract ALL vital signs with temporal context and trends
+- Complete medication reconciliation with drug interactions
+- Full diagnostic workup including differentials and probabilities
+- Laboratory values with reference ranges and clinical significance
+- Procedure notes, imaging findings, and diagnostic studies
+- Social determinants and lifestyle factors
+
+STEP 3: Advanced Clinical Reasoning & Risk Stratification
+- Chief complaint analysis with symptom constellation mapping
+- Differential diagnosis reasoning with probability assessment
+- Risk factor identification and comprehensive stratification
+- Comorbidity analysis and disease interaction patterns
+- Prognosis assessment with evidence-based outcomes
+- Clinical decision support with guideline adherence
+
+STEP 4: Quality Assurance & Critical Thinking
+- Cross-reference findings for internal consistency
+- Identify critical values requiring immediate intervention
+- Flag potential medication errors, contraindications, allergies
+- Assess care quality and adherence to best practices
+- Generate evidence-based clinical decision support
+- Validate clinical reasoning against established protocols
+
+STEP 5: Structured Clinical Intelligence Output
+Provide comprehensive analysis in JSON format with these mandatory sections:
+{
+  "document_assessment": {
+    "document_type": "",
+    "completeness_score": 0,
+    "quality_flags": [],
+    "missing_data": []
+  },
+  "clinical_data": {
+    "vital_signs": {},
+    "medications": [],
+    "conditions": [],
+    "lab_results": [],
+    "procedures": []
+  },
+  "reasoning_analysis": {
+    "chief_complaint": "",
+    "differential_diagnosis": [],
+    "risk_stratification": {},
+    "clinical_decision_support": []
+  },
+  "quality_assurance": {
+    "critical_values": [],
+    "medication_alerts": [],
+    "guideline_adherence": {},
+    "consistency_check": ""
+  },
+  "recommendations": {
+    "immediate_actions": [],
+    "follow_up_care": [],
+    "monitoring_parameters": [],
+    "specialist_referrals": []
+  },
+  "metadata": {
+    "analysis_confidence": 0,
+    "evidence_grade": "",
+    "clinical_complexity": ""
+  }
+}
+
+Focus on clinical accuracy, completeness, and actionable specialist-level insights."""
+        
     else:  # batch
         system_prompt = """You are a medical AI assistant optimized for efficient batch processing.
         
@@ -397,7 +476,7 @@ Provide concise but complete analysis suitable for high-volume processing.
         if anthropic_client:
             message = anthropic_client.messages.create(
                 model="claude-sonnet-4-20250514",
-                max_tokens=2000 if analysis_type == "comprehensive" else 1000,
+                max_tokens=3000 if analysis_type == "complicated" else (2000 if analysis_type == "comprehensive" else 1000),
                 temperature=0.1,  # Low temperature for medical accuracy
                 system=system_prompt,
                 messages=[
@@ -424,7 +503,7 @@ Provide your analysis in JSON format with appropriate medical categories and ext
             # Fallback to OpenAI GPT-4
             completion = await openai_client.chat.completions.create(
                 model="gpt-4o",
-                max_tokens=2000 if analysis_type == "comprehensive" else 1000,
+                max_tokens=3000 if analysis_type == "complicated" else (2000 if analysis_type == "comprehensive" else 1000),
                 temperature=0.1,
                 messages=[
                     {"role": "system", "content": system_prompt},
@@ -467,6 +546,17 @@ Provide your analysis in JSON format with appropriate medical categories and ext
                 "Risk stratification",
                 "Treatment recommendations",
                 "Follow-up planning"
+            ]
+        elif analysis_type == "complicated":
+            analysis["analysis_features"] = [
+                "Multi-step clinical reasoning",
+                "Specialist-level analysis",
+                "Quality assurance validation",
+                "Evidence-based recommendations",
+                "Clinical decision support",
+                "Risk stratification",
+                "Medication interaction analysis",
+                "Guideline adherence assessment"
             ]
         elif analysis_type == "batch":
             analysis["batch_info"] = {
