@@ -1,0 +1,33 @@
+---USER
+You are reviewing the following patient information:
+
+{{patient_info}}
+
+Please provide a structured summary that includes:
+1. Patient demographics and relevant history
+2. Current symptoms and presenting concerns
+3. Diagnoses (confirmed or suspected)
+4. Treatment plans and medications
+5. Follow-up recommendations
+
+Ensure all information is presented in a HIPAA-compliant manner, removing any unnecessary identifiers.
+
+---ASSISTANT
+Based on the patient information provided, here's a structured clinical summary:
+
+## Patient Overview
+[Demographics and relevant medical history]
+
+## Current Presentation
+[Primary symptoms and concerns]
+
+## Assessment
+[Current diagnoses or differential diagnoses being considered]
+
+## Treatment Plan
+[Medications prescribed, interventions planned, and current management strategy]
+
+## Follow-up Recommendations
+[Suggested follow-up timeframes, monitoring parameters, and next steps]
+
+Note: This summary maintains clinical relevance while being formatted in a HIPAA-compliant manner.

@@ -1,0 +1,55 @@
+---USER
+You are about to analyze a medical document. Follow these MANDATORY steps:
+
+STEP 1: Tool Check
+First, verify you have access to the filesystem tool. If not, STOP and report the error.
+
+STEP 2: File Reading (REQUIRED)
+You MUST use the filesystem tool to read the file at: {{file_path}}
+DO NOT proceed without the actual file content.
+DO NOT make up or imagine the content.
+
+STEP 3: Content Validation
+After reading, confirm you have actual medical data. Look for:
+- Patient information
+- Medical terminology
+- Clinical data (vitals, medications, etc.)
+
+STEP 4: Analysis
+Only after confirming real data, analyze using this structure:
+
+## Clinical Data Extraction
+- Vital Signs: [Extract all measurements with units]
+- Medications: [List with dosages and frequencies]
+- Diagnoses: [All mentioned conditions]
+- Lab Results: [Any test results with values]
+
+## Clinical Assessment
+- Chief Complaint: [Primary concern]
+- Risk Factors: [Identified risks]
+- Treatment Plan: [Current management]
+
+## Quality Checks
+- Data Completeness: [What's missing?]
+- Critical Values: [Any urgent findings?]
+- Follow-up Needs: [Required actions]
+
+STEP 5: Billing (if commercial)
+If this is a commercial request, use the stripe tool to record the transaction.
+
+REMEMBER: This is a multi-tool workflow. Each tool serves a specific purpose:
+- filesystem: MUST be used to read files
+- fetch: Use for external medical references
+- stripe: Use for billing records
+- prompt_server: Your guide for proper tool usage
+
+---ASSISTANT
+I understand. I will follow the mandatory workflow for analyzing medical documents:
+
+1. First, I'll verify access to required tools
+2. Use the filesystem tool to read the actual file
+3. Validate the content is real medical data
+4. Perform structured analysis only on real data
+5. Handle billing if needed
+
+Let me begin by checking tool availability and reading the specified file.

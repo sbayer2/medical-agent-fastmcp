@@ -1,0 +1,299 @@
+{
+  "name": "MedicalAgent",
+  "instructions": null,
+  "fastmcp_version": "2.11.3",
+  "mcp_version": "1.13.0",
+  "server_version": null,
+  "tools": [
+    {
+      "key": "create_customer",
+      "name": "create_customer",
+      "description": "Create a new Stripe customer for billing.\n\nArgs:\n    email: Customer email address\n    name: Customer name\n    description: Optional customer description\n    \nReturns:\n    Customer creation result with customer ID",
+      "input_schema": {
+        "properties": {
+          "email": {
+            "title": "Email",
+            "type": "string"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Description"
+          }
+        },
+        "required": [
+          "email"
+        ],
+        "type": "object"
+      },
+      "annotations": null,
+      "tags": null,
+      "enabled": true
+    },
+    {
+      "key": "create_payment_intent",
+      "name": "create_payment_intent",
+      "description": "Create a Stripe payment intent for medical analysis.\n\nArgs:\n    customer_id: Stripe customer ID\n    analysis_type: Type of analysis (basic, comprehensive, batch)\n    document_count: Number of documents to analyze\n    description: Optional payment description\n    \nReturns:\n    Payment intent with client secret for frontend payment",
+      "input_schema": {
+        "properties": {
+          "customer_id": {
+            "title": "Customer Id",
+            "type": "string"
+          },
+          "analysis_type": {
+            "default": "basic",
+            "title": "Analysis Type",
+            "type": "string"
+          },
+          "document_count": {
+            "default": 1,
+            "title": "Document Count",
+            "type": "integer"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Description"
+          }
+        },
+        "required": [
+          "customer_id"
+        ],
+        "type": "object"
+      },
+      "annotations": null,
+      "tags": null,
+      "enabled": true
+    },
+    {
+      "key": "confirm_payment",
+      "name": "confirm_payment",
+      "description": "Confirm and retrieve payment status.\n\nArgs:\n    payment_intent_id: Stripe payment intent ID\n    \nReturns:\n    Payment confirmation and metadata",
+      "input_schema": {
+        "properties": {
+          "payment_intent_id": {
+            "title": "Payment Intent Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "payment_intent_id"
+        ],
+        "type": "object"
+      },
+      "annotations": null,
+      "tags": null,
+      "enabled": true
+    },
+    {
+      "key": "process_paid_analysis",
+      "name": "process_paid_analysis",
+      "description": "Process medical analysis after payment confirmation.\n\nArgs:\n    payment_intent_id: Confirmed Stripe payment intent ID\n    document_content: Medical document text to analyze\n    patient_id: Optional patient identifier\n    \nReturns:\n    Medical analysis results with payment confirmation",
+      "input_schema": {
+        "properties": {
+          "payment_intent_id": {
+            "title": "Payment Intent Id",
+            "type": "string"
+          },
+          "document_content": {
+            "title": "Document Content",
+            "type": "string"
+          },
+          "patient_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Patient Id"
+          }
+        },
+        "required": [
+          "payment_intent_id",
+          "document_content"
+        ],
+        "type": "object"
+      },
+      "annotations": null,
+      "tags": null,
+      "enabled": true
+    },
+    {
+      "key": "get_customer_info",
+      "name": "get_customer_info",
+      "description": "Retrieve Stripe customer information.\n\nArgs:\n    customer_id: Stripe customer ID\n    \nReturns:\n    Customer information and payment history",
+      "input_schema": {
+        "properties": {
+          "customer_id": {
+            "title": "Customer Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "customer_id"
+        ],
+        "type": "object"
+      },
+      "annotations": null,
+      "tags": null,
+      "enabled": true
+    },
+    {
+      "key": "analyze_medical_document",
+      "name": "analyze_medical_document",
+      "description": "Analyze medical document content and extract structured information.\n\nArgs:\n    document_content: Raw medical document text (SOAP notes, lab results, etc.)\n    analysis_type: Type of analysis (basic, comprehensive, batch)\n    patient_id: Optional patient identifier\n    \nReturns:\n    Structured medical analysis with extracted information",
+      "input_schema": {
+        "properties": {
+          "document_content": {
+            "title": "Document Content",
+            "type": "string"
+          },
+          "analysis_type": {
+            "default": "basic",
+            "title": "Analysis Type",
+            "type": "string"
+          },
+          "patient_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Patient Id"
+          }
+        },
+        "required": [
+          "document_content"
+        ],
+        "type": "object"
+      },
+      "annotations": null,
+      "tags": null,
+      "enabled": true
+    },
+    {
+      "key": "get_patient_summary",
+      "name": "get_patient_summary",
+      "description": "Retrieve patient summary information.\n\nArgs:\n    patient_id: Patient identifier\n    \nReturns:\n    Patient summary with demographics, conditions, and recent activity",
+      "input_schema": {
+        "properties": {
+          "patient_id": {
+            "title": "Patient Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "patient_id"
+        ],
+        "type": "object"
+      },
+      "annotations": null,
+      "tags": null,
+      "enabled": true
+    },
+    {
+      "key": "calculate_billing",
+      "name": "calculate_billing",
+      "description": "Calculate billing for medical analysis services.\n\nArgs:\n    analysis_type: Type of analysis (basic, comprehensive, batch)\n    document_count: Number of documents to process\n    customer_tier: Customer tier for potential discounts\n    \nReturns:\n    Billing calculation with itemized costs",
+      "input_schema": {
+        "properties": {
+          "analysis_type": {
+            "title": "Analysis Type",
+            "type": "string"
+          },
+          "document_count": {
+            "default": 1,
+            "title": "Document Count",
+            "type": "integer"
+          },
+          "customer_tier": {
+            "default": "standard",
+            "title": "Customer Tier",
+            "type": "string"
+          }
+        },
+        "required": [
+          "analysis_type"
+        ],
+        "type": "object"
+      },
+      "annotations": null,
+      "tags": null,
+      "enabled": true
+    },
+    {
+      "key": "get_available_services",
+      "name": "get_available_services",
+      "description": "Get information about available medical analysis services.\n\nReturns:\n    Complete service catalog with pricing and descriptions",
+      "input_schema": {
+        "properties": {},
+        "type": "object"
+      },
+      "annotations": null,
+      "tags": null,
+      "enabled": true
+    },
+    {
+      "key": "health_check",
+      "name": "health_check",
+      "description": "Health check endpoint for service monitoring.\n\nReturns:\n    Service health status and basic metrics",
+      "input_schema": {
+        "properties": {},
+        "type": "object"
+      },
+      "annotations": null,
+      "tags": null,
+      "enabled": true
+    }
+  ],
+  "prompts": [],
+  "resources": [],
+  "templates": [],
+  "capabilities": {
+    "tools": {
+      "listChanged": true
+    },
+    "resources": {
+      "subscribe": false,
+      "listChanged": false
+    },
+    "prompts": {
+      "listChanged": false
+    },
+    "logging": {}
+  }
+}

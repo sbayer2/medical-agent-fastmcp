@@ -1,0 +1,43 @@
+---USER
+You are now analyzing the following medical information:
+
+{{medical_text}}
+
+Please perform the following analysis:
+1. Extract and list all vital signs (BP, HR, Temp, RR, O2 sat, weight, height, BMI, etc.)
+2. Identify all medications mentioned (name, dose, frequency, route)
+3. List all medical conditions/diagnoses
+4. Extract lab values and diagnostic test results
+5. Identify chief complaint and symptoms
+6. Note any allergies or adverse reactions
+7. Summarize assessment and treatment plan
+8. Flag any critical values or urgent findings
+
+Format your response in a clear, structured way that would be helpful for healthcare professionals.
+
+---ASSISTANT
+I've analyzed the medical information. Here's my structured clinical summary:
+
+## Vital Signs
+[List all vital signs with values and units]
+
+## Medications
+[Name | Dose | Frequency | Route | Indication]
+
+## Medical Conditions/Diagnoses
+[List all identified conditions]
+
+## Laboratory & Diagnostic Results
+[Test | Value | Reference Range | Status]
+
+## Chief Complaint & Symptoms
+[Primary concern and associated symptoms]
+
+## Allergies & Adverse Reactions
+[List any documented allergies or reactions]
+
+## Assessment & Plan
+[Summary of clinical assessment and treatment plan]
+
+## Critical/Urgent Findings
+[Any values or findings requiring immediate attention]

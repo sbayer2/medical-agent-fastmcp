@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Medical Analysis SaaS</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+        }
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        select, button {
+            padding: 10px 20px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            white-space: pre-wrap;
+        }
+        .pricing {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+        }
+        .tier {
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            text-align: center;
+        }
+        .tier h3 {
+            margin: 0 0 10px 0;
+            color: #3498db;
+        }
+        .price {
+            font-size: 24px;
+            font-weight: bold;
+            color: #27ae60;
+        }
+        .loading {
+            display: none;
+            text-align: center;
+            color: #3498db;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏥 Medical Document Analysis</h1>
+        
+        <div class="pricing">
+            <div class="tier">
+                <h3>Basic</h3>
+                <div class="price">$0.10</div>
+                <small>SOAP Analysis</small>
+            </div>
+            <div class="tier">
+                <h3>Comprehensive</h3>
+                <div class="price">$0.50</div>
+                <small>Full Record Analysis</small>
+            </div>
+            <div class="tier">
+                <h3>Batch</h3>
+                <div class="price">$0.05</div>
+                <small>Per Document</small>
+            </div>
+        </div>
+
+        <h2>Enter Medical Information</h2>
+        <textarea id="medicalText" rows="10" placeholder="Enter medical text here...
+
+Example:
+Patient: 45-year-old male
+Chief Complaint: Chest pain and shortness of breath
+BP: 150/95, HR: 88, Temp: 98.6F
+Current medications: Lisinopril 10mg daily, Metformin 500mg BID
+History: Diabetes, Hypertension"></textarea>
+
+        <div>
+            <label>Analysis Type: </label>
+            <select id="analysisType">
+                <option value="basic">Basic ($0.10)</option>
+                <option value="comprehensive">Comprehensive ($0.50)</option>
+            </select>
+        </div>
+
+        <button onclick="analyzeText()">Analyze Medical Text</button>
+        
+        <div class="loading" id="loading">
+            ⏳ Analyzing... Please wait...
+        </div>
+
+        <div id="result"></div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:8000';
+        const TEST_CUSTOMER = 'cus_SSpdLLaCGuIao0';
+
+        async function analyzeText() {
+            const text = document.getElementById('medicalText').value;
+            const type = document.getElementById('analysisType').value;
+            const resultDiv = document.getElementById('result');
+            const loadingDiv = document.getElementById('loading');
+            
+            if (!text.trim()) {
+                alert('Please enter some medical text to analyze');
+                return;
+            }
+
+            // Show loading
+            loadingDiv.style.display = 'block';
+            resultDiv.innerHTML = '';
+
+            try {
+                const response = await fetch(`${API_URL}/api/analyze`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        customer_id: TEST_CUSTOMER,
+                        type: type,
+                        query: text
+                    })
+                });
+
+                const data = await response.json();
+                
+                // Hide loading
+                loadingDiv.style.display = 'none';
+
+                if (data.status === 'success') {
+                    resultDiv.innerHTML = `
+<h3>✅ Analysis Complete</h3>
+<p><strong>Billed:</strong> $${data.price} (${data.tier} tier)</p>
+<p><strong>Customer:</strong> ${data.customer_id}</p>
+<hr>
+<h4>Medical Analysis:</h4>
+${data.analysis}`;
+                } else if (data.job_id) {
+                    // Handle async processing
+                    resultDiv.innerHTML = `<p>Processing... Job ID: ${data.job_id}</p>`;
+                    setTimeout(() => checkJobStatus(data.job_id), 2000);
+                } else {
+                    resultDiv.innerHTML = `<p style="color: red;">Error: ${data.error || 'Unknown error'}</p>`;
+                }
+            } catch (error) {
+                loadingDiv.style.display = 'none';
+                resultDiv.innerHTML = `<p style="color: red;">Error: ${error.message}</p>`;
+            }
+        }
+
+        async function checkJobStatus(jobId) {
+            try {
+                const response = await fetch(`${API_URL}/api/job/${jobId}`);
+                const data = await response.json();
+                
+                const resultDiv = document.getElementById('result');
+                if (data.status === 'success') {
+                    resultDiv.innerHTML = `
+<h3>✅ Analysis Complete</h3>
+<p><strong>Billed:</strong> $${data.price} (${data.tier} tier)</p>
+<hr>
+<h4>Medical Analysis:</h4>
+${data.analysis}`;
+                } else if (data.status === 'pending') {
+                    setTimeout(() => checkJobStatus(jobId), 2000);
+                } else {
+                    resultDiv.innerHTML = `<p style="color: red;">Error: ${data.error}</p>`;
+                }
+            } catch (error) {
+                document.getElementById('result').innerHTML = 
+                    `<p style="color: red;">Error checking job status: ${error.message}</p>`;
+            }
+        }
+    </script>
+</body>
+</html>

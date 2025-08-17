@@ -1,0 +1,62 @@
+services:
+  medical-agent:
+    build: .
+    container_name: medical-agent-server
+    ports:
+      - "8000:8000"
+    environment:
+      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
+      - STRIPE_API_KEY=${STRIPE_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - DATABASE_URL=postgresql://user:pass@db:5432/medical
+    volumes:
+      - medical_data:/app/medical_files_data
+      - ./prompts:/app/prompts
+      - ./stripe-mcp-wrapper.sh:/app/stripe-mcp-wrapper.sh:ro
+      - ~/.zshrc:/root/.zshrc:ro  # Mount your zshrc for keys
+      - ./fastagent.config.yaml:/app/fastagent.config.yaml:ro
+    depends_on:
+      - db
+      - redis
+    restart: unless-stopped
+    networks:
+      - medical-net
+
+  db:
+    image: postgres:15
+    container_name: medical-db
+    environment:
+      - POSTGRES_DB=medical
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=pass
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - medical-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d medical"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: medical-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - medical-net
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+networks:
+  medical-net:
+    driver: bridge
+
+volumes:
+  medical_data:
+  postgres_data:

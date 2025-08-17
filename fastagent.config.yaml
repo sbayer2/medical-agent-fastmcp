@@ -1,0 +1,40 @@
+# FastAgent Configuration File for Medical SaaS
+
+# Default Model Configuration
+default_model: claude-3-5-sonnet-20241022
+
+# Logging and Console Configuration
+logger:
+    progress_display: true
+    show_chat: true
+    show_tools: true
+    truncate_tools: true
+
+# MCP Servers Configuration
+mcp:
+    servers:
+        # Prompt server - provides dynamic prompts and tool guidance
+        prompt_server:
+            command: "python"
+            args: ["/app/prompt_server_mcp.py"]
+            
+        # Filesystem server - for medical document access
+        filesystem:
+            command: "npx"
+            args: ["-y", "@modelcontextprotocol/server-filesystem", "/app/medical_files_data"]
+            
+        # Fetch server - for external resources
+        fetch:
+            command: "npx"
+            args: ["-y", "@modelcontextprotocol/server-fetch"]
+            
+        # Stripe server - for billing
+        stripe:
+            command: "/app/stripe-mcp-wrapper.sh"
+            args: []
+            
+    # Agent configuration
+    agents:
+        medical_analyzer:
+            servers: ["prompt_server", "filesystem", "fetch", "stripe"]
+            model: "claude-3-5-sonnet-20241022"
