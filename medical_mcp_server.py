@@ -346,9 +346,20 @@ async def analyze_medical_document(
             "error": f"Invalid analysis type. Available types: {list(BILLING_TIERS.keys())}"
         }
     
+    # Enhanced error diagnostics
     if not anthropic_client and not openai_client:
+        import os
+        anthropic_key_present = bool(os.getenv('ANTHROPIC_API_KEY'))
+        openai_key_present = bool(os.getenv('OPENAI_API_KEY'))
         return {
-            "error": "No AI providers configured. Please set ANTHROPIC_API_KEY or OPENAI_API_KEY environment variable."
+            "error": "No AI providers configured",
+            "debug_info": {
+                "anthropic_key_detected": anthropic_key_present,
+                "openai_key_detected": openai_key_present,
+                "anthropic_client_status": str(type(anthropic_client)) if anthropic_client else "None",
+                "openai_client_status": str(type(openai_client)) if openai_client else "None",
+                "environment": "lambda" if os.getenv('AWS_LAMBDA_FUNCTION_NAME') else "local"
+            }
         }
     
     tier = BILLING_TIERS[analysis_type]
@@ -382,82 +393,18 @@ Provide detailed clinical insights with medical reasoning and recommendations.
         Use structured JSON format with comprehensive categories."""
         
     elif analysis_type == "complicated":
-        system_prompt = """You are a specialized medical AI consultant performing advanced clinical analysis with multi-step reasoning.
+        system_prompt = """You are a specialist medical AI performing advanced clinical analysis.
 
-MANDATORY MULTI-STEP WORKFLOW:
+WORKFLOW (5 Steps):
+1. VALIDATE: Document type, completeness score (1-10), missing data
+2. EXTRACT: Vitals, medications, conditions, labs, procedures with context
+3. ANALYZE: Chief complaint, differentials, risk stratification, comorbidities
+4. VERIFY: Critical values, drug interactions, guideline adherence
+5. RECOMMEND: Immediate actions, follow-up, monitoring, referrals
 
-STEP 1: Document Validation & Completeness Assessment
-- Verify medical document authenticity and completeness (score 1-10)
-- Identify document type (SOAP, lab report, discharge summary, H&P, etc.)
-- Flag missing critical information and data quality issues
-- Assess temporal context and document relationships
+OUTPUT: JSON with sections: document_assessment, clinical_data, reasoning_analysis, quality_assurance, recommendations, metadata.
 
-STEP 2: Comprehensive Clinical Data Extraction  
-- Extract ALL vital signs with temporal context and trends
-- Complete medication reconciliation with drug interactions
-- Full diagnostic workup including differentials and probabilities
-- Laboratory values with reference ranges and clinical significance
-- Procedure notes, imaging findings, and diagnostic studies
-- Social determinants and lifestyle factors
-
-STEP 3: Advanced Clinical Reasoning & Risk Stratification
-- Chief complaint analysis with symptom constellation mapping
-- Differential diagnosis reasoning with probability assessment
-- Risk factor identification and comprehensive stratification
-- Comorbidity analysis and disease interaction patterns
-- Prognosis assessment with evidence-based outcomes
-- Clinical decision support with guideline adherence
-
-STEP 4: Quality Assurance & Critical Thinking
-- Cross-reference findings for internal consistency
-- Identify critical values requiring immediate intervention
-- Flag potential medication errors, contraindications, allergies
-- Assess care quality and adherence to best practices
-- Generate evidence-based clinical decision support
-- Validate clinical reasoning against established protocols
-
-STEP 5: Structured Clinical Intelligence Output
-Provide comprehensive analysis in JSON format with these mandatory sections:
-{
-  "document_assessment": {
-    "document_type": "",
-    "completeness_score": 0,
-    "quality_flags": [],
-    "missing_data": []
-  },
-  "clinical_data": {
-    "vital_signs": {},
-    "medications": [],
-    "conditions": [],
-    "lab_results": [],
-    "procedures": []
-  },
-  "reasoning_analysis": {
-    "chief_complaint": "",
-    "differential_diagnosis": [],
-    "risk_stratification": {},
-    "clinical_decision_support": []
-  },
-  "quality_assurance": {
-    "critical_values": [],
-    "medication_alerts": [],
-    "guideline_adherence": {},
-    "consistency_check": ""
-  },
-  "recommendations": {
-    "immediate_actions": [],
-    "follow_up_care": [],
-    "monitoring_parameters": [],
-    "specialist_referrals": []
-  },
-  "metadata": {
-    "analysis_confidence": 0,
-    "evidence_grade": "",
-    "clinical_complexity": ""
-  }
-}
-
-Focus on clinical accuracy, completeness, and actionable specialist-level insights."""
+Focus on clinical accuracy and actionable insights."""
         
     else:  # batch
         system_prompt = """You are a medical AI assistant optimized for efficient batch processing.
@@ -474,6 +421,10 @@ Provide concise but complete analysis suitable for high-volume processing.
     try:
         # Try Claude Sonnet 4 first, fallback to OpenAI GPT-4
         if anthropic_client:
+            # Add timeout handling for API calls
+            import time
+            start_time = time.time()
+            
             message = anthropic_client.messages.create(
                 model="claude-sonnet-4-20250514",
                 max_tokens=3000 if analysis_type == "complicated" else (2000 if analysis_type == "comprehensive" else 1000),
@@ -490,8 +441,11 @@ Provide concise but complete analysis suitable for high-volume processing.
 
 Provide your analysis in JSON format with appropriate medical categories and extracted information."""
                     }
-                ]
+                ],
+                timeout=45.0  # 45 second timeout for MCP compatibility
             )
+            
+            processing_time = time.time() - start_time
             ai_analysis = message.content[0].text
             model_used = "claude-sonnet-4-20250514"
             tokens_used = {
@@ -535,7 +489,8 @@ Provide your analysis in JSON format with appropriate medical categories and ext
             "patient_id": patient_id,
             "model_used": model_used,
             "ai_analysis": ai_analysis,
-            "tokens_used": tokens_used
+            "tokens_used": tokens_used,
+            "processing_time_seconds": round(processing_time, 2) if 'processing_time' in locals() else None
         }
         
         # Add analysis-specific metadata
@@ -568,12 +523,27 @@ Provide your analysis in JSON format with appropriate medical categories and ext
         return analysis
         
     except Exception as e:
-        return {
+        import os
+        error_type = type(e).__name__
+        error_details = {
             "error": f"AI analysis failed: {str(e)}",
+            "error_type": error_type,
             "analysis_type": analysis_type,
             "timestamp": datetime.now().isoformat(),
-            "fallback_mode": "error"
+            "environment": "lambda" if os.getenv('AWS_LAMBDA_FUNCTION_NAME') else "local",
+            "anthropic_available": bool(anthropic_client),
+            "openai_available": bool(openai_client)
         }
+        
+        # Specific error handling
+        if "timeout" in str(e).lower() or "timed out" in str(e).lower():
+            error_details["fix_suggestion"] = "API timeout - consider using 'basic' or 'comprehensive' analysis for faster processing"
+        elif "rate limit" in str(e).lower() or "429" in str(e):
+            error_details["fix_suggestion"] = "Rate limit exceeded - please try again in a few moments"
+        elif "authentication" in str(e).lower() or "401" in str(e):
+            error_details["fix_suggestion"] = "API authentication failed - check environment variables"
+        
+        return error_details
 
 @mcp.tool
 def get_patient_summary(patient_id: str) -> Dict[str, Any]:
@@ -724,6 +694,29 @@ def get_available_services() -> Dict[str, Any]:
     }
     
     return services
+
+@mcp.tool
+def simulate_payment_success(payment_intent_id: str) -> Dict[str, Any]:
+    """
+    Simulate successful payment for testing purposes.
+    
+    Args:
+        payment_intent_id: Stripe payment intent ID to simulate success for
+        
+    Returns:
+        Simulated payment success response
+    """
+    
+    # This is for testing only - simulates payment success
+    return {
+        "success": True,
+        "payment_intent_id": payment_intent_id,
+        "status": "succeeded",
+        "amount_received": "simulated",
+        "simulation": True,
+        "message": "Payment simulated as successful for testing purposes",
+        "timestamp": datetime.now().isoformat()
+    }
 
 # Health check function for monitoring
 @mcp.tool
