@@ -74,7 +74,7 @@ claude mcp add Medical-agent-server https://medical-agent-server.fastmcp.app/mcp
 ### Setup
 ```bash
 # Clone repository
-git clone https://github.com/[username]/medical-agent-fastmcp
+git clone https://github.com/sbayer2/medical-agent-fastmcp
 cd medical-agent-fastmcp
 
 # Create virtual environment
