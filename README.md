@@ -17,7 +17,7 @@
 
 ## 🤖 **AI Models**
 
-- **Primary**: Claude Sonnet 4 (`claude-sonnet-4-20250514`)
+- **Primary**: Claude Sonnet 4.5 (`claude-sonnet-4-5-20250929`)
 - **Fallback**: OpenAI GPT-4o (`gpt-4o`)
 - **Analysis Types**: Basic extraction, comprehensive insights, batch processing
 - **Token Tracking**: Real-time usage monitoring for accurate billing

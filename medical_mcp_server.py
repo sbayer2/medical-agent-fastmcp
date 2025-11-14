@@ -426,7 +426,7 @@ Provide concise but complete analysis suitable for high-volume processing.
             start_time = time.time()
             
             message = anthropic_client.messages.create(
-                model="claude-sonnet-4-20250514",
+                model="claude-sonnet-4-5-20250929",
                 max_tokens=10000 if analysis_type in ["complicated", "comprehensive"] else 1000,
                 temperature=0.1,  # Low temperature for medical accuracy
                 system=system_prompt,
@@ -447,7 +447,7 @@ Provide your analysis in JSON format with appropriate medical categories and ext
             
             processing_time = time.time() - start_time
             ai_analysis = message.content[0].text
-            model_used = "claude-sonnet-4-20250514"
+            model_used = "claude-sonnet-4-5-20250929"
             tokens_used = {
                 "input_tokens": message.usage.input_tokens,
                 "output_tokens": message.usage.output_tokens,
