@@ -442,7 +442,7 @@ Provide concise but complete analysis suitable for high-volume processing.
 Provide your analysis in JSON format with appropriate medical categories and extracted information."""
                     }
                 ],
-                timeout=25.0  # CloudFront default timeout is 30s
+                timeout=120.0  # CloudFront default timeout is 30s
             )
             
             processing_time = time.time() - start_time
@@ -459,7 +459,7 @@ Provide your analysis in JSON format with appropriate medical categories and ext
                 model="gpt-4o",
                 max_tokens=4096 if analysis_type in ["complicated", "comprehensive"] else 1000,
                 temperature=0.1,
-                timeout=25.0,  # CloudFront default timeout is 30s
+                timeout=120.0,  # CloudFront default timeout is 30s
                 messages=[
                     {"role": "system", "content": system_prompt},
                     {
