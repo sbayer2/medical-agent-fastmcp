@@ -427,7 +427,7 @@ Provide concise but complete analysis suitable for high-volume processing.
             
             message = anthropic_client.messages.create(
                 model="claude-sonnet-4-5-20250929",
-                max_tokens=4096 if analysis_type in ["complicated", "comprehensive"] else 1000,
+                max_tokens=2048 if analysis_type in ["complicated", "comprehensive"] else 1000,
                 temperature=0.1,  # Low temperature for medical accuracy
                 system=system_prompt,
                 messages=[
@@ -442,7 +442,7 @@ Provide concise but complete analysis suitable for high-volume processing.
 Provide your analysis in JSON format with appropriate medical categories and extracted information."""
                     }
                 ],
-                timeout=120.0  # 2 minute timeout for all analysis types
+                timeout=25.0  # CloudFront default timeout is 30s
             )
             
             processing_time = time.time() - start_time
@@ -457,9 +457,9 @@ Provide your analysis in JSON format with appropriate medical categories and ext
             # Fallback to OpenAI GPT-4
             completion = await openai_client.chat.completions.create(
                 model="gpt-4o",
-                max_tokens=4096 if analysis_type in ["complicated", "comprehensive"] else 1000,
+                max_tokens=2048 if analysis_type in ["complicated", "comprehensive"] else 1000,
                 temperature=0.1,
-                timeout=120.0,  # 2 minute timeout
+                timeout=25.0,  # CloudFront default timeout is 30s
                 messages=[
                     {"role": "system", "content": system_prompt},
                     {
